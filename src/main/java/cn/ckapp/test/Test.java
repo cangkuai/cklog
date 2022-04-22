@@ -18,6 +18,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.event.world.BlockEvent;
+import org.stringtemplate.v4.ST;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -27,6 +28,8 @@ import java.util.Date;
 @Mod("test")
 public class Test {
 public String languages,blocks;
+public String pass="no";
+public String[] whitelist=null;
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -75,7 +78,7 @@ public String languages,blocks;
             try {
                 file2.createNewFile();
                 FileWriter writer = new FileWriter(file2);
-                writer.write("sitVersion=1\nlanguage=en-us\nblock=Bedrock");
+                writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
                 writer.flush();
                 writer.close();
                 LOGGER.info("create sit file success");
@@ -91,19 +94,27 @@ public String languages,blocks;
         }
         String ls;
             try {
-                if(!br.readLine().equals("sitVersion=1")){
+                if(!br.readLine().equals("sitVersion=2")){
                     FileWriter writer = new FileWriter(file2);
-                    writer.write("sitVersion=1\nlanguage=en-us\nblock=Bedrock");
+                    writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
                     writer.flush();
                     writer.close();
                     languages="en-us";
                     blocks="Bedrock";
+                    pass="ok";
                     LOGGER.info("update sit file success");
                 }else{
                     ls = br.readLine();
                     languages = ls.substring(9);
                     ls = br.readLine();
                     blocks = ls.substring(6);
+                    ls = br.readLine();
+                    if(ls.equals("whitelist=null")){
+                        pass="ok";
+                    }else {
+                        ls=ls.substring(10);
+                        whitelist=ls.split(",");
+                    }
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -145,7 +156,16 @@ public String languages,blocks;
                 throw new RuntimeException(e);
             }
         }
-        if (names.equals(blocks)){
+
+            if(whitelist!=null)
+             {
+            for(String i:whitelist){
+                if (i.equals(players)){
+                    pass="ok";
+                }
+            }
+        }
+        if (names.equals(blocks)&&pass.equals("ok")){
             if(languages.equals("en-us")) {
                 event.getPlayer().sendMessage(new TextComponent("start search"), Util.NIL_UUID);
             }
@@ -176,6 +196,9 @@ public String languages,blocks;
                         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String dateString = formatter.format(new Date(Long.parseLong(ls1[4]+"000")));
                             event.getPlayer().sendMessage(new TextComponent(ls1[3] + " " + dateString + " " + ls1[5] + " " + types), Util.NIL_UUID);
+                            if(whitelist!=null){
+                                pass="no";
+                            }
                     }
                 }
         }catch (FileNotFoundException e) {
