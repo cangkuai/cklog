@@ -11,7 +11,7 @@
 # 4.设置文件
 设置文件路径为./mods/ckapp/sitting.txt  
 sitVersion为设置文件版本，请勿修改  
-language为语言设置目前支持en-us和zh.cn  
+language为语言设置目前支持en-us和zh-cn  
 分别代表英语和简体中文  
 block代表用于查询的方块，默认为基岩（badrock）
 whitelist为白名单，如果设置为null则不启用，如启用则写玩家名字以英语逗号隔开。
