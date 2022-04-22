@@ -22,13 +22,11 @@ import net.minecraftforge.event.world.BlockEvent;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("test")
 public class Test {
-
+public String languages,blocks;
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -67,10 +65,54 @@ public class Test {
     public void onServerStarting(ServerStartingEvent event) {
         // do something when the server starts
         File file1=new File(System.getProperty("user.dir")+"/mods/ckapp");
+        String curDir = System.getProperty("user.dir");
         if(!file1.exists()) {
             file1.mkdir();
             LOGGER.info("create dir success");
         }
+        File file2 = new File(curDir+"/mods/ckapp/sitting.txt");
+        if (!file2.exists()){
+            try {
+                file2.createNewFile();
+                FileWriter writer = new FileWriter(file2);
+                writer.write("sitVersion=1\nlanguage=en-us\nblock=Bedrock");
+                writer.flush();
+                writer.close();
+                LOGGER.info("create sit file success");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(file2));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        String ls;
+            try {
+                if(!br.readLine().equals("sitVersion=1")){
+                    FileWriter writer = new FileWriter(file2);
+                    writer.write("sitVersion=1\nlanguage=en-us\nblock=Bedrock");
+                    writer.flush();
+                    writer.close();
+                    languages="en-us";
+                    blocks="Bedrock";
+                    LOGGER.info("update sit file success");
+                }else{
+                    ls = br.readLine();
+                    languages = ls.substring(9);
+                    ls = br.readLine();
+                    blocks = ls.substring(6);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (!(languages.equals("en-us")||languages.equals("zh-cn"))){
+                LOGGER.error("language sit error");
+                languages="en-us";
+            }
+
         }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
@@ -103,24 +145,37 @@ public class Test {
                 throw new RuntimeException(e);
             }
         }
-        if (names.equals("Bedrock")){
-            event.getPlayer().sendMessage(new TextComponent("start search"),Util.NIL_UUID);
+        if (names.equals(blocks)){
+            if(languages.equals("en-us")) {
+                event.getPlayer().sendMessage(new TextComponent("start search"), Util.NIL_UUID);
+            }
+            if(languages.equals("zh-cn")){
+                event.getPlayer().sendMessage(new TextComponent("开始搜索"), Util.NIL_UUID);
+            }
             long startTime = System.currentTimeMillis();
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 while ((ls= br.readLine()) != null) {
                     String ls2=ls.substring(0,len);
                     if (ls2.equals(menss)){
-                        String types;
+                        String types="";
                         String[] ls1=ls.split(",");
+                        if(languages.equals("en-us")) {
                         if (ls1[6].equals("0")){
                             types="Break";
                         }else {
                             types="Place";
+                        }}
+                        if(languages.equals("zh-cn")){
+                            if (ls1[6].equals("0")){
+                                types="破坏";
+                            }else {
+                                types="放置";
+                            }
                         }
                         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String dateString = formatter.format(new Date(Long.parseLong(ls1[4]+"000")));
-                        event.getPlayer().sendMessage(new TextComponent(ls1[3]+" "+dateString+" "+ls1[5]+" "+types),Util.NIL_UUID);
+                            event.getPlayer().sendMessage(new TextComponent(ls1[3] + " " + dateString + " " + ls1[5] + " " + types), Util.NIL_UUID);
                     }
                 }
         }catch (FileNotFoundException e) {
@@ -129,7 +184,12 @@ public class Test {
                 throw new RuntimeException(e);
             }
             long endTime = System.currentTimeMillis();
-            event.getPlayer().sendMessage(new TextComponent("search Finish use "+(endTime - startTime) + " ms"),Util.NIL_UUID);
+            if(languages.equals("en-us")) {
+                event.getPlayer().sendMessage(new TextComponent("search Finish use " + (endTime - startTime) + " ms"), Util.NIL_UUID);
+            }
+            if(languages.equals("zh-cn")){
+                event.getPlayer().sendMessage(new TextComponent("搜索完成 一共使用 " + (endTime - startTime) + " ms"), Util.NIL_UUID);
+            }
             }
         try {
             FileWriter writer = new FileWriter(file,true);

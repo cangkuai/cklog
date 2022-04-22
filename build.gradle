@@ -12,7 +12,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 
 group = 'cn.ckapp'
-version = '1.2'
+version = '1.3'
 
 java {
     archivesBaseName = 'cklog'
@@ -186,3 +186,6 @@ jar {
 }
 
 jar.finalizedBy('reobfJar')
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
