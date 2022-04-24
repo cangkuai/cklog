@@ -1,155 +1,95 @@
 package cn.ckapp.test;
 
 import net.minecraft.Util;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.minecraftforge.event.world.BlockEvent;
-import org.stringtemplate.v4.ST;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("test")
 public class Test {
-public String languages,blocks;
-public String pass="no";
-public String[] whitelist=null;
+    public static boolean pass = false;
+    public static Set<String> whitelist = new HashSet<>();
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Test() {
-        // Register the setup method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        // Register the enqueueIMC method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
-        // Register the processIMC method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
+//        // Register the setup method for modloading
+//        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+//        // Register the enqueueIMC method for modloading
+//        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
+//        // Register the processIMC method for modloading
+//        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
 
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CKConfig.pair.getValue(), "sitting.toml");
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+        init();
     }
 
-    private void setup(final FMLCommonSetupEvent event) {
-        // some preinit code
-
-    }
-
-    private void enqueueIMC(final InterModEnqueueEvent event) {
-        // some example code to dispatch IMC to another mod
-        InterModComms.sendTo("test", "helloworld", () -> {
-
-            return "Hello world";
-        });
-    }
-
-    private void processIMC(final InterModProcessEvent event) {
-        // some example code to receive and process InterModComms from other mods
-
-    }
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        // do something when the server starts
-        File file1=new File(System.getProperty("user.dir")+"/mods/ckapp");
+    private static void init() {
         String curDir = System.getProperty("user.dir");
-        if(!file1.exists()) {
-            file1.mkdir();
-            LOGGER.info("create dir success");
+        File file = new File(curDir + "/mods/ckapp");
+        if (!file.exists()) {
+            file.mkdir();
         }
-        File file2 = new File(curDir+"/mods/ckapp/sitting.txt");
-        if (!file2.exists()){
-            try {
-                file2.createNewFile();
-                FileWriter writer = new FileWriter(file2);
-                writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
-                writer.flush();
-                writer.close();
-                LOGGER.info("create sit file success");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(file2));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        String ls;
-            try {
-                if(!br.readLine().equals("sitVersion=2")){
-                    FileWriter writer = new FileWriter(file2);
-                    writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
-                    writer.flush();
-                    writer.close();
-                    languages="en-us";
-                    blocks="Bedrock";
-                    pass="ok";
-                    LOGGER.info("update sit file success");
-                }else{
-                    ls = br.readLine();
-                    languages = ls.substring(9);
-                    ls = br.readLine();
-                    blocks = ls.substring(6);
-                    ls = br.readLine();
-                    if(ls.equals("whitelist=null")){
-                        pass="ok";
-                    }else {
-                        ls=ls.substring(10);
-                        whitelist=ls.split(",");
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (!(languages.equals("en-us")||languages.equals("zh-cn"))){
-                LOGGER.error("language sit error");
-                languages="en-us";
-            }
+    }
 
-        }
+//    private void setup(final FMLCommonSetupEvent event) {
+//        // some preinit code
+//
+//    }
+//
+//    private void enqueueIMC(final InterModEnqueueEvent event) {
+//        // some example code to dispatch IMC to another mod
+//        InterModComms.sendTo("test", "helloworld", () -> {
+//
+//            return "Hello world";
+//        });
+//    }
+//
+//    private void processIMC(final InterModProcessEvent event) {
+//        // some example code to receive and process InterModComms from other mods
+//
+//    }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
     // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static class RegistryEvents {
-        @SubscribeEvent
-        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
-            // register a new block here
-        }
-    }
+//    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+//    public static class RegistryEvents {
+//        @SubscribeEvent
+//        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
+//            // register a new block here
+//        }
+//    }
 
     @SubscribeEvent
-    public void breakss(BlockEvent.BreakEvent event) {
-    String x =String.valueOf(event.getPos().getX());
-    String y =String.valueOf(event.getPos().getY());
-    String z =String.valueOf(event.getPos().getZ());
-    String players=event.getPlayer().getName().getString();
-    String curDir = System.getProperty("user.dir");
-    String times=String.valueOf( System.currentTimeMillis()/1000);
-    String names=event.getState().getBlock().getName().getString();
-    String ls;
-    String menss=x+","+y+","+z;
-    Integer len=menss.length();
-        File file = new File(curDir+"/mods/ckapp/data.txt");
-        if (!file.exists()){
+    public void onBreak(BlockEvent.BreakEvent event) {
+        Player players = event.getPlayer();
+        String curDir = System.getProperty("user.dir");
+        long times = System.currentTimeMillis() / 1000;
+        Block block = event.getState().getBlock();
+        String ls;
+        String menss = event.getPos().toString();
+        int len = menss.length();
+        File file = new File(curDir + "/mods/ckapp/data");
+        if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
@@ -157,83 +97,60 @@ public String[] whitelist=null;
             }
         }
 
-            if(whitelist!=null)
-             {
-            for(String i:whitelist){
-                if (i.equals(players)){
-                    pass="ok";
+        if (!whitelist.isEmpty()) {
+            for (String player : whitelist) {
+                if (event.getPlayer().getName().getString().equals(player)) {
+                    pass = true;
                 }
             }
         }
-        if (names.equals(blocks)&&pass.equals("ok")){
-            if(languages.equals("en-us")) {
-                event.getPlayer().sendMessage(new TextComponent("start search"), Util.NIL_UUID);
-            }
-            if(languages.equals("zh-cn")){
-                event.getPlayer().sendMessage(new TextComponent("开始搜索"), Util.NIL_UUID);
-            }
+        if (block.getRegistryName().getPath().equals(CKConfig.block.toLowerCase()) && pass) {
+            event.getPlayer().sendMessage(new TranslatableComponent("cn.ckapp.run"), Util.NIL_UUID);
             long startTime = System.currentTimeMillis();
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
-                while ((ls= br.readLine()) != null) {
-                    String ls2=ls.substring(0,len);
-                    if (ls2.equals(menss)){
-                        String types="";
-                        String[] ls1=ls.split(",");
-                        if(languages.equals("en-us")) {
-                        if (ls1[6].equals("0")){
-                            types="Break";
-                        }else {
-                            types="Place";
-                        }}
-                        if(languages.equals("zh-cn")){
-                            if (ls1[6].equals("0")){
-                                types="破坏";
-                            }else {
-                                types="放置";
-                            }
-                        }
+                while ((ls = br.readLine()) != null) {
+                    String ls2 = ls.substring(0, len);
+                    if (ls2.equals(menss)) {
+
+                        String[] ls1 = ls.split(",");
+                        String[] ls3 = ls.split("'");
                         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        String dateString = formatter.format(new Date(Long.parseLong(ls1[4]+"000")));
-                            event.getPlayer().sendMessage(new TextComponent(ls1[3] + " " + dateString + " " + ls1[5] + " " + types), Util.NIL_UUID);
-                            if(whitelist!=null){
-                                pass="no";
-                            }
+                        String dateString = formatter.format(new Date(Long.parseLong(ls1[8] + "000")));
+                        if (ls1[10].equals("0")) {
+                            event.getPlayer().sendMessage(new TextComponent(ls3[1] + " " + dateString + " " + ls1[9] + " ").append(new TranslatableComponent("cn.ckapp.break")), Util.NIL_UUID);
+                        } else {
+                            event.getPlayer().sendMessage(new TextComponent(ls3[1] + " " + dateString + " " + ls1[9] + " ").append(new TranslatableComponent("cn.ckapp.place")), Util.NIL_UUID);
+                        }
+                        if (whitelist != null) {
+                            pass = false;
+                        }
                     }
                 }
-        }catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             long endTime = System.currentTimeMillis();
-            if(languages.equals("en-us")) {
-                event.getPlayer().sendMessage(new TextComponent("search Finish use " + (endTime - startTime) + " ms"), Util.NIL_UUID);
-            }
-            if(languages.equals("zh-cn")){
-                event.getPlayer().sendMessage(new TextComponent("搜索完成 一共使用 " + (endTime - startTime) + " ms"), Util.NIL_UUID);
-            }
-            }
+            event.getPlayer().sendMessage(new TextComponent("").append(new TranslatableComponent("cn.ckapp.finish")).append((endTime - startTime) + " ms"), Util.NIL_UUID);
+        }
         try {
-            FileWriter writer = new FileWriter(file,true);
-            writer.write(x+","+y+","+z+","+players+","+times+","+names+",0\n");
+            FileWriter writer = new FileWriter(file, true);
+            writer.write(menss + "," + players + "," + times + "," + block + ",0\n");
             writer.flush();
             writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
     @SubscribeEvent
-    public void breakss(BlockEvent.EntityPlaceEvent event) {
-        String x =String.valueOf(event.getPos().getX());
-        String y =String.valueOf(event.getPos().getY());
-        String z =String.valueOf(event.getPos().getZ());
-        String players=event.getEntity().getName().getString();
+    public void onPlace(BlockEvent.EntityPlaceEvent event) {
+        Entity entity = event.getEntity();
         String curDir = System.getProperty("user.dir");
-        String times=String.valueOf( System.currentTimeMillis()/1000);
-        File file = new File(curDir+"/mods/ckapp/data.txt");
-        String names=event.getPlacedBlock().getBlock().getName().getString();
-        if (!file.exists()){
+        long times = System.currentTimeMillis() / 1000;
+        File file = new File(curDir + "/mods/ckapp/data");
+        Block block = event.getPlacedBlock().getBlock();
+        if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
@@ -241,13 +158,12 @@ public String[] whitelist=null;
             }
         }
         try {
-            FileWriter writer = new FileWriter(file,true);
-            writer.write(x+","+y+","+z+","+players+","+times+","+names+",1\n");
+            FileWriter writer = new FileWriter(file, true);
+            writer.write(event.getPos().toString() + "," + entity + "," + times + "," + block + ",1\n");
             writer.flush();
             writer.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
-    }
+}
