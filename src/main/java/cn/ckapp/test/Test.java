@@ -1,10 +1,8 @@
 package cn.ckapp.test;
 
 import net.minecraft.Util;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,9 +18,9 @@ import org.apache.logging.log4j.Logger;
 import net.minecraftforge.event.world.BlockEvent;
 import org.stringtemplate.v4.ST;
 
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod("test")
@@ -30,6 +28,7 @@ public class Test {
 public String languages,blocks;
 public String pass="no";
 public String[] whitelist=null;
+public ArrayList<String> languagesit=new ArrayList<String>();
     // Directly reference a log4j logger.
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -67,63 +66,13 @@ public String[] whitelist=null;
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // do something when the server starts
-        File file1=new File(System.getProperty("user.dir")+"/mods/ckapp");
-        String curDir = System.getProperty("user.dir");
-        if(!file1.exists()) {
-            file1.mkdir();
-            LOGGER.info("create dir success");
-        }
-        File file2 = new File(curDir+"/mods/ckapp/sitting.txt");
-        if (!file2.exists()){
-            try {
-                file2.createNewFile();
-                FileWriter writer = new FileWriter(file2);
-                writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
-                writer.flush();
-                writer.close();
-                LOGGER.info("create sit file success");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(file2));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        String ls;
-            try {
-                if(!br.readLine().equals("sitVersion=2")){
-                    FileWriter writer = new FileWriter(file2);
-                    writer.write("sitVersion=2\nlanguage=en-us\nblock=Bedrock\nwhitelist=null");
-                    writer.flush();
-                    writer.close();
-                    languages="en-us";
-                    blocks="Bedrock";
-                    pass="ok";
-                    LOGGER.info("update sit file success");
-                }else{
-                    ls = br.readLine();
-                    languages = ls.substring(9);
-                    ls = br.readLine();
-                    blocks = ls.substring(6);
-                    ls = br.readLine();
-                    if(ls.equals("whitelist=null")){
-                        pass="ok";
-                    }else {
-                        ls=ls.substring(10);
-                        whitelist=ls.split(",");
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (!(languages.equals("en-us")||languages.equals("zh-cn"))){
-                LOGGER.error("language sit error");
-                languages="en-us";
-            }
-
+        ckreader ckreaders=new ckreader();
+        HashMap<String, Object> sitting=ckreaders.getsit();
+        languages=(String) sitting.get("language");
+        pass=(String) sitting.get("pass");
+        whitelist=(String[]) sitting.get("whitelist");
+        blocks=(String) sitting.get("blocks");
+        languagesit=ckreaders.getlanguagesit();
         }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
@@ -138,116 +87,10 @@ public String[] whitelist=null;
 
     @SubscribeEvent
     public void breakss(BlockEvent.BreakEvent event) {
-    String x =String.valueOf(event.getPos().getX());
-    String y =String.valueOf(event.getPos().getY());
-    String z =String.valueOf(event.getPos().getZ());
-    String players=event.getPlayer().getName().getString();
-    String curDir = System.getProperty("user.dir");
-    String times=String.valueOf( System.currentTimeMillis()/1000);
-    String names=event.getState().getBlock().getName().getString();
-    String ls;
-    String menss=x+","+y+","+z;
-    Integer len=menss.length();
-        File file = new File(curDir+"/mods/ckapp/data.txt");
-        if (!file.exists()){
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-            if(whitelist!=null)
-             {
-            for(String i:whitelist){
-                if (i.equals(players)){
-                    pass="ok";
-                }
-            }
-        }
-        if (names.equals(blocks)&&pass.equals("ok")){
-            if(languages.equals("en-us")) {
-                event.getPlayer().sendMessage(new TextComponent("start search"), Util.NIL_UUID);
-            }
-            if(languages.equals("zh-cn")){
-                event.getPlayer().sendMessage(new TextComponent("开始搜索"), Util.NIL_UUID);
-            }
-            long startTime = System.currentTimeMillis();
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                while ((ls= br.readLine()) != null) {
-                    String ls2=ls.substring(0,len);
-                    if (ls2.equals(menss)){
-                        String types="";
-                        String[] ls1=ls.split(",");
-                        if(languages.equals("en-us")) {
-                        if (ls1[6].equals("0")){
-                            types="Break";
-                        }else {
-                            types="Place";
-                        }}
-                        if(languages.equals("zh-cn")){
-                            if (ls1[6].equals("0")){
-                                types="破坏";
-                            }else {
-                                types="放置";
-                            }
-                        }
-                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        String dateString = formatter.format(new Date(Long.parseLong(ls1[4]+"000")));
-                            event.getPlayer().sendMessage(new TextComponent(ls1[3] + " " + dateString + " " + ls1[5] + " " + types), Util.NIL_UUID);
-                            if(whitelist!=null){
-                                pass="no";
-                            }
-                    }
-                }
-        }catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            long endTime = System.currentTimeMillis();
-            if(languages.equals("en-us")) {
-                event.getPlayer().sendMessage(new TextComponent("search Finish use " + (endTime - startTime) + " ms"), Util.NIL_UUID);
-            }
-            if(languages.equals("zh-cn")){
-                event.getPlayer().sendMessage(new TextComponent("搜索完成 一共使用 " + (endTime - startTime) + " ms"), Util.NIL_UUID);
-            }
-            }
-        try {
-            FileWriter writer = new FileWriter(file,true);
-            writer.write(x+","+y+","+z+","+players+","+times+","+names+",0\n");
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        new breakchack(event,languages,blocks,pass,whitelist,languagesit);
     }
     @SubscribeEvent
     public void breakss(BlockEvent.EntityPlaceEvent event) {
-        String x =String.valueOf(event.getPos().getX());
-        String y =String.valueOf(event.getPos().getY());
-        String z =String.valueOf(event.getPos().getZ());
-        String players=event.getEntity().getName().getString();
-        String curDir = System.getProperty("user.dir");
-        String times=String.valueOf( System.currentTimeMillis()/1000);
-        File file = new File(curDir+"/mods/ckapp/data.txt");
-        String names=event.getPlacedBlock().getBlock().getName().getString();
-        if (!file.exists()){
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        try {
-            FileWriter writer = new FileWriter(file,true);
-            writer.write(x+","+y+","+z+","+players+","+times+","+names+",1\n");
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        new EntityPlace(event);
     }
     }
