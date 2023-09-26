@@ -1,6 +1,6 @@
-package cn.ckapp.test;
+package cn.ckapp.cklog;
 
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 
 import java.io.File;
 import java.io.FileWriter;

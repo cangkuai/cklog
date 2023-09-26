@@ -1,14 +1,13 @@
-package cn.ckapp.test;
+package cn.ckapp.cklog;
 
 import net.minecraft.Util;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraftforge.event.level.BlockEvent;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-
 public class breakchack {
     public breakchack(BlockEvent.BreakEvent event, String languages, String blocks, String pass, String[] whitelist, ArrayList<String> languagesit){
         String x =String.valueOf(event.getPos().getX());
@@ -39,7 +38,7 @@ public class breakchack {
             }
         }
         if (names.equals(blocks)&&pass.equals("ok")){
-            event.getPlayer().sendMessage(new TextComponent(languagesit.get(0)), Util.NIL_UUID);
+            event.getPlayer().sendSystemMessage(Component.translatable(languagesit.get(0)));
             long startTime = System.currentTimeMillis();
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
@@ -55,7 +54,7 @@ public class breakchack {
                         }
                         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String dateString = formatter.format(new Date(Long.parseLong(ls1[4]+"000")));
-                        event.getPlayer().sendMessage(new TextComponent(ls1[3] + " " + dateString + " " + ls1[5] + " " + types), Util.NIL_UUID);
+                        event.getPlayer().sendSystemMessage(Component.translatable(ls1[3] + " " + dateString + " " + ls1[5] + " " + types));
                         if(whitelist!=null){
                             pass="no";
                         }
@@ -67,7 +66,7 @@ public class breakchack {
                 throw new RuntimeException(e);
             }
             long endTime = System.currentTimeMillis();
-            event.getPlayer().sendMessage(new TextComponent(languagesit.get(3) + (endTime - startTime) + " ms"), Util.NIL_UUID);
+            event.getPlayer().sendSystemMessage(Component.translatable(languagesit.get(3) + (endTime - startTime) + " ms"));
         }
         try {
             FileWriter writer = new FileWriter(file,true);

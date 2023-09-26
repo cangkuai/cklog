@@ -1,4 +1,4 @@
-package cn.ckapp.test;
+package cn.ckapp.cklog;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -9,10 +9,10 @@ public class ckreader {
     private String languages;
     private Logger LOGGER = LogManager.getLogger();
     public HashMap<String, Object> getsit(){
-    String blocks;
-    String pass="no";
-    String[] whitelist=null;
-    HashMap<String, Object> Sit = new HashMap<String, Object>();
+        String blocks;
+        String pass="no";
+        String[] whitelist=null;
+        HashMap<String, Object> Sit = new HashMap<String, Object>();
         File file1=new File(System.getProperty("user.dir")+"/mods/ckapp");
         String curDir = System.getProperty("user.dir");
         if(!file1.exists()) {
@@ -112,7 +112,5 @@ public class ckreader {
             throw new RuntimeException(e);
         }
         return data;
-        }
-
     }
-
+}
